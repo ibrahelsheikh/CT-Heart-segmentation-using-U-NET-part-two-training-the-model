@@ -1,4 +1,3 @@
-
 import os
 import numpy as np
 import cv2
@@ -6,7 +5,7 @@ from glob import glob
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 from albumentations import HorizontalFlip, VerticalFlip, Rotate
-os.chdir(r"E:\UNET CT")
+
 
 def create_dir(path):
     """ Create a directory. """
@@ -32,8 +31,8 @@ def augment_data(images, masks, save_path, augment=True):
 
     for idx, (x, y) in tqdm(enumerate(zip(images, masks)), total=len(images)):
         """ Extracting the dir name and image name """
-        dir_name = x.split("\\")[-3]
-        name = dir_name + "_" + x.split("\\")[-1].split(".")[0]
+        dir_name = x.split(os.path.sep)[-3]
+        name = dir_name + "_" + x.split(os.path.sep)[-1].split(".")[0]
 
         """ Read the image and mask """
         x = cv2.imread(x, cv2.IMREAD_COLOR)
@@ -60,32 +59,27 @@ def augment_data(images, masks, save_path, augment=True):
 
         else:
             X = [x]
-            #print(len(X))
             Y =[y]
 
-        idx = 0
         for i, m in zip(X, Y):
             i = cv2.resize(i, (W, H))
             m = cv2.resize(m, (W, H))
-            m = m/255.0
+            m = m / 255.0
             m = (m > 0.5) * 255
 
-            if len(X) == 1:  # each loop it will take one image 
-                tmp_image_name = f"{name}.jpg"
-                tmp_mask_name  = f"{name}.jpg"
-            else:
-                tmp_image_name = f"{name}_{idx}.jpg"
-                tmp_mask_name  = f"{name}_{idx}.jpg"
+            for j, (img, mask) in enumerate(zip([i], [m])):
+                if len(X) == 1:
+                    tmp_image_name = f"{name}.jpg"
+                    tmp_mask_name  = f"{name}.png"
+                else:
+                    tmp_image_name = f"{name}_{j}.jpg"
+                    tmp_mask_name  = f"{name}_{j}.png"
 
-            image_path = os.path.join(save_path, "image/", tmp_image_name)
-            mask_path  = os.path.join(save_path, "mask/", tmp_mask_name)
+                image_path = os.path.join(save_path, "image", tmp_image_name)
+                mask_path  = os.path.join(save_path, "mask", tmp_mask_name)
 
-            cv2.imwrite(image_path, i)
-            cv2.imwrite(mask_path, m)
-
-            idx += 1
-        break
-
+                cv2.imwrite(image_path, img)
+                cv2.imwrite(mask_path, mask)
 
 if __name__ == "__main__":
     """ Load the dataset """
